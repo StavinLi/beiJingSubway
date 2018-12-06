@@ -116,9 +116,6 @@ $.ajax({
     }
 });
 
-
-
-
 var eventsHandler = {
     haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
     init: function(options) {
