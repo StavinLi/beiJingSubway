@@ -55,6 +55,10 @@ gulp.task('js', function() {
         .pipe(rev.manifest())
         .pipe(gulp.dest('rev/js'))
 });
+gulp.task('other', function() {
+    return gulp.src('src/libs/*.js')
+        .pipe(gulp.dest('dest/libs'))
+});
 
 
 gulp.task('html', function() {
@@ -81,5 +85,5 @@ gulp.task('watch', function() {
 });
 
 gulp.task('default', function(cb) {
-    runSequence(['css', 'js'], 'html')(cb);
+    runSequence('other', ['css', 'js'], 'html')(cb);
 })
