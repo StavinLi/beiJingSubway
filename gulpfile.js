@@ -81,5 +81,5 @@ gulp.task('watch', function() {
 });
 
 gulp.task('default', function(cb) {
-    runSequence(['css', 'js'], 'html', 'watch')(cb);
+    runSequence(['css', 'js'], 'html')(cb);
 })
