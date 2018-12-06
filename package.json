@@ -24,7 +24,6 @@
     },
     "dependencies": {
         "express": "^4.16.4",
-        "fs": "0.0.1-security",
-        "http": "0.0.0"
+        "http-proxy-middleware": "^0.19.1"
     }
 }
