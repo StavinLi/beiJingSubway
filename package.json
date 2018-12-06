@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "express": "^4.16.4",
+        "gulp-sourcemaps": "^2.6.4",
         "http-proxy-middleware": "^0.19.1"
     }
 }
