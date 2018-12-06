@@ -1,5 +1,5 @@
 $.ajax({
-    url: "/subwaymap/beijing.xml",
+    url: "/apis/subwaymap/beijing.xml",
     dataType: 'xml',
     type: 'GET',
     timeout: 5000,
