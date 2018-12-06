@@ -101,7 +101,7 @@ $.ajax({
                 }
             }
         }
-        window.panZoom = svgPanZoom('#mobile-svg', {
+        window.panzoom = svgPanZoom('#mobile-svg', {
             zoomEnabled: true,
             panEnabled: true,
             controlIconsEnabled: false,
@@ -112,6 +112,7 @@ $.ajax({
             maxZoom: 5,
             customEventsHandler: eventsHandler
         });
+        panzoom.pan({ x: -950 + window.innerWidth / 2, y: -700 + window.innerHeight / 2 });
     }
 });
 
