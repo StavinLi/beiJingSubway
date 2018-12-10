@@ -7,7 +7,7 @@
 
 - 部署步骤
     1. npm i  //安装
-    2. npm run start //运行
+    2. npm run start //本地运行
     3. npm run build //构建编译
 
 ### 目录结构描述
