@@ -15,10 +15,10 @@ $.ajax({
                     var lp = $(ls[i]).attr("lp").split(";")[n].split(",");
                     var rect = $.svg('rect').appendTo('#g-box')
                     rect.attr({
-                        x: lp[0],
-                        y: lp[1],
-                        width: lp[2],
-                        height: lp[3],
+                        x: lp[0] * 1,
+                        y: lp[1] * 1,
+                        width: lp[2] * 1,
+                        height: lp[3] * 1,
                         fill: lColor,
                     });
                     var text = $.svg('text').appendTo('#g-box')
@@ -39,17 +39,17 @@ $.ajax({
                 if (thisP.attr("arc")) {
                     var path = $.svg('path').appendTo('#g-box')
                     path.attr({
-                        d: `M${thisP.attr("x")} ${thisP.attr("y")} Q${thisP.attr("arc").split(":")[0]} ${thisP.attr("arc").split(":")[1]} ${thisPlus.attr("x")} ${thisPlus.attr("y")}`,
+                        d: `M${thisP.attr("x")*1} ${thisP.attr("y")*1} Q${thisP.attr("arc").split(":")[0]*1} ${thisP.attr("arc").split(":")[1]*1} ${thisPlus.attr("x")*1} ${thisPlus.attr("y")*1}`,
                         stroke: lColor
                     });
                     continue;
                 }
                 var line = $.svg('line').appendTo('#g-box')
                 line.attr({
-                    x1: thisP.attr("x"),
-                    y1: thisP.attr("y"),
-                    x2: thisPlus.attr("x"),
-                    y2: thisPlus.attr("y"),
+                    x1: thisP.attr("x") * 1,
+                    y1: thisP.attr("y") * 1,
+                    x2: thisPlus.attr("x") * 1,
+                    y2: thisPlus.attr("y") * 1,
                     stroke: lColor,
                     sdata: thisP.attr("lb")
                 })
@@ -93,8 +93,8 @@ $.ajax({
                     var circle = $.svg('circle').appendTo('#g-box')
                     circle.attr({
                         r: 4,
-                        cx: thisP.attr("x"),
-                        cy: thisP.attr("y"),
+                        cx: thisP.attr("x") * 1,
+                        cy: thisP.attr("y") * 1,
                         stroke: lColor,
                         sdata: thisP.attr("lb")
                     })
