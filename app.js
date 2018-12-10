@@ -1,6 +1,7 @@
 const express = require("express");
 var proxy = require('http-proxy-middleware');
 var app = express();
+var open = require("open");
 app.use(express.static('src'));
 app.use('/', proxy({
     target: 'https://map.bjsubway.com/',
@@ -10,3 +11,4 @@ app.use('/', proxy({
     changeOrigin: true
 }));
 app.listen(5101);
+open("http://127.0.0.1:5101")
