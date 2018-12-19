@@ -150,8 +150,8 @@ $.ajax({
         var timer = null;
         $("circle:not(.disabled),image[sdata]").hover(function() {
             var $that = $(this)
-            var thisleft = $that.offset().left + ($that[0].nodeName == "circle" ? 4 : 7),
-                thisTop = $that.offset().top - 200 + ($that[0].nodeName == "circle" ? 4 : 7);
+            var thisleft = $that.offset().left + ($that[0].nodeName == "circle" ? 4 : 7) * panzoom.getZoom(),
+                thisTop = $that.offset().top - 200 + ($that[0].nodeName == "circle" ? 4 : 7) * panzoom.getZoom();
             timer = setTimeout(function() {
                 var stationName = $that.attr("sdata");
                 var lines = Object.keys(stations[stationName])
