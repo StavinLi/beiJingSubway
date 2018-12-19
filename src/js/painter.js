@@ -2,6 +2,7 @@ $.ajax({
     url: "/apis/subwaymap/beijing.xml",
     dataType: 'xml',
     type: 'GET',
+    async: false,
     timeout: 5000,
     success: function(data) {
         var ls = $(data).find("sw").children()
@@ -86,7 +87,8 @@ $.ajax({
                         width: "14",
                         height: "14",
                         x: thisP.attr("x") - 7,
-                        y: thisP.attr("y") - 7
+                        y: thisP.attr("y") - 7,
+                        sdata: thisP.attr("lb")
                     });
                     image[0].href.baseVal = `https://map.bjsubway.com/subwaymap/turn.png`;
                 } else {
@@ -98,6 +100,9 @@ $.ajax({
                         stroke: lColor,
                         sdata: thisP.attr("lb")
                     })
+                    if (thisP.attr("iu") === "false") {
+                        circle.addSvgClass("disabled")
+                    }
                 }
             }
         }
@@ -113,6 +118,69 @@ $.ajax({
             customEventsHandler: eventsHandler
         });
         panzoom.pan({ x: -950 + window.innerWidth / 2, y: -700 + window.innerHeight / 2 });
+    }
+});
+var stations = {}
+$.ajax({
+    url: "/apis/subwaymap/stations.xml",
+    dataType: 'xml',
+    type: 'GET',
+    async: false,
+    timeout: 5000,
+    success: function(data) {
+        var ss = $(data).find("stations").children()
+        for (var i = 0; i < ss.length; i++) {
+            var stationName = $(ss).eq(i).attr("name");
+            if (!stations[stationName]) {
+                stations[stationName] = []
+            }
+            var firstEnds = $(ss).eq(i).attr("firstend")
+            for (var j = 0; j < firstEnds.split("||||||").length; j++) {
+                var firstEnd = firstEnds.split("||||||")[j]
+                if (!stations[stationName][firstEnd.split("::::::")[0]]) {
+                    stations[stationName][firstEnd.split("::::::")[0]] = []
+                }
+                stations[stationName][firstEnd.split("::::::")[0]].push({
+                    line: firstEnd.split("::::::")[1],
+                    time: firstEnd.split("::::::")[2],
+                })
+            }
+        }
+        console.log(stations)
+        var timer = null;
+        $("circle:not(.disabled),image[sdata]").hover(function() {
+            var $that = $(this)
+            var thisleft = $that.offset().left + ($that[0].nodeName == "circle" ? 4 : 7),
+                thisTop = $that.offset().top - 200 + ($that[0].nodeName == "circle" ? 4 : 7);
+            timer = setTimeout(function() {
+                var stationName = $that.attr("sdata");
+                var lines = Object.keys(stations[stationName])
+                var infoStr = ``;
+                for (var i = 0; i < lines.length; i++) {
+                    infoStr += `<article><h3>${lines[i]}</h3>`
+                    for (var j = 0; j < stations[stationName][lines[i]].length; j++) {
+                        var thisLine = stations[stationName][lines[i]][j]
+                        infoStr += `<ul>
+                            <li>${thisLine.line}</li>
+                            <li>${thisLine.time.replace("、"," ")}</li>
+                        </ul>`
+                    }
+                    infoStr += `</article>`
+                }
+                $(".station-info").show().scrollTop(0).css({
+                    left: thisleft,
+                    top: thisTop
+                }).html(`<h2>${$that.attr("sdata")}</h2>${infoStr}`)
+            }, 200)
+        }, function() {
+            $(".station-info").hide();
+            timer = null;
+        });
+        $(".station-info").hover(function() {
+            $(".station-info").show();
+        }, function() {
+            $(".station-info").hide();
+        })
     }
 });
 

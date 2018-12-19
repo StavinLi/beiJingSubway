@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+ul {
+    list-style: none;
+}
+
 html,
 body {
     width: 100%;
@@ -12,6 +16,22 @@ body {
     line-height: 1.6;
     color: #636b6f;
     font-family: '黑体';
+}
+
+body {
+    position: relative;
+}
+
+.station-info {
+    position: absolute;
+    width: 380px;
+    height: 200px;
+    border: 1px solid #000;
+    background: #ffffff;
+    border-radius: 4px;
+    display: none;
+    padding: 10px;
+    overflow-y: scroll;
 }
 
 svg {
