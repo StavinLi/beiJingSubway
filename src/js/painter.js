@@ -171,10 +171,10 @@ $.ajax({
                     left: thisleft,
                     top: thisTop
                 }).html(`<h2>${$that.attr("sdata")}</h2>${infoStr}`)
-            }, 200)
+            }, 500)
         }, function() {
             $(".station-info").hide();
-            timer = null;
+            clearTimeout(timer)
         });
         $(".station-info").hover(function() {
             $(".station-info").show();
