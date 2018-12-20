@@ -266,7 +266,8 @@ function getThisLineInfo(type = 1) {
                 timeReturnArr[0].push(thisTime)
                 timeReturnArr[1].push(thisReturn)
             }
-            var timeIndex = timeReturnArr[0].indexOf(timeReturnArr[0].min());
+            var timeIndex = timeReturnArr[0].indexOf(timeReturnArr[0].min()),
+                returnIndex;
             if (timeReturnArr[1][timeIndex] == timeReturnArr[1].min()) {
                 returnIndex = timeIndex;
             } else {
