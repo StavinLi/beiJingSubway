@@ -173,7 +173,6 @@ $.ajax({
             if (isStart) {
                 startStation = $(".mark-start").attr("name");
                 endStation = $(".mark-end").attr("name");
-                $(".line-info").show();
                 $(".line-info h2").html(`${startStation} - ${endStation}`);
                 $(".line-type li").removeClass("active");
                 $(".line-type li[data-value='1']").addClass("active");
@@ -258,6 +257,12 @@ function getThisLineInfo(type = 1) {
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         success(data) {
+            if (data.result == "error") {
+                alert(`抱歉，${startStation}到${endStation}无法换乘`);
+                $(".mark").remove();
+                return;
+            }
+            $(".line-info").show();
             $(".mark:not(rect):not(.mark-start):not(.mark-end)").remove();
             var timeReturnArr = [
                 [],
