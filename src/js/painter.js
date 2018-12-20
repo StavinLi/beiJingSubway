@@ -1,3 +1,6 @@
+var beijingData = "",
+    startStation = "",
+    endStation = "";
 $.ajax({
     url: "/apis/subwaymap/beijing.xml",
     dataType: 'xml',
@@ -5,6 +8,7 @@ $.ajax({
     async: false,
     timeout: 5000,
     success: function(data) {
+        beijingData = data;
         var ls = $(data).find("sw").children()
         for (var i = 0; i < ls.length; i++) {
             var ps = $(ls[i]).children()
@@ -120,7 +124,8 @@ $.ajax({
         panzoom.pan({ x: -950 + window.innerWidth / 2, y: -700 + window.innerHeight / 2 });
     }
 });
-var stations = {}
+var stations = {},
+    isClick = false;
 $.ajax({
     url: "/apis/subwaymap/stations.xml",
     dataType: 'xml',
@@ -146,9 +151,62 @@ $.ajax({
                 })
             }
         }
-        console.log(stations)
-        var timer = null;
+        var timer = null,
+            isStart = true;
+        $("circle:not(.disabled),image[sdata]").on("click", function() {
+            var $that = $(this)
+            isClick = true;
+            var image = $.svg('image').appendTo('#g-box')
+            $(".station-info").hide();
+            image.attr({
+                name: $that.attr("sdata"),
+                width: "20",
+                height: "31",
+                x: $that[0].nodeName == "circle" ? $that.attr("cx") - 10 : ($that.attr("x") - 3),
+                y: $that[0].nodeName == "circle" ? $that.attr("cy") - 28 : ($that.attr("y") - 21),
+            }).addSvgClass(`mark ${isStart?"mark-start":"mark-end"}`);
+            image[0].href.baseVal = `https://map.bjsubway.com/subwaymap/${isStart?"start":"end"}.png`;
+            isStart = !isStart;
+            if (isStart) {
+                startStation = $(".mark-start").attr("name");
+                endStation = $(".mark-end").attr("name");
+                $(".line-info").show();
+                $(".line-info h2").html(`${startStation} - ${endStation}`);
+                $(".line-type li").removeClass("active");
+                $(".line-type li[data-value='1']").addClass("active");
+                var rect = $.svg('rect').appendTo('#g-box');
+                rect.attr({
+                    width: 2500,
+                    height: 1500,
+                    x: -250,
+                    y: 0
+                }).addSvgClass("mark");
+                getThisLineInfo(1);
+                var flag = 0;
+                $("rect.mark").bind({
+                    mousedown: function(e) {
+                        flag = 0;
+                    },
+                    mousemove: function(e) {
+                        flag = 1;
+                    },
+                    mouseup: function(e) {
+                        if (flag === 0) { //点击
+                            $("rect.mark").bind('click', function() {
+                                isClick = false;
+                                $(".mark").remove();
+                                $(".line-info").hide();
+                                return false; //阻止默认行为
+                            })
+                        }
+                    }
+                });
+            }
+        });
         $("circle:not(.disabled),image[sdata]").hover(function() {
+            if (isClick) {
+                return;
+            }
             var $that = $(this)
             var thisleft = $that.offset().left + ($that[0].nodeName == "circle" ? 4 : 7) * panzoom.getZoom(),
                 thisTop = $that.offset().top - 200 + ($that[0].nodeName == "circle" ? 4 : 7) * panzoom.getZoom();
@@ -184,6 +242,221 @@ $.ajax({
     }
 });
 
+$(".line-type").on("click", "li:not(.active)", function() {
+    $(this).addClass("active").siblings().removeClass("active");
+    getThisLineInfo($(this).attr("data-value"));
+});
+
+function getThisLineInfo(type = 1) {
+    $(".line-info article").remove();
+    $.ajax({
+        type: "get",
+        url: `/apis/api/searchstartend?start=${startStation}&end=${endStation}`,
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        success(data) {
+            $(".mark:not(rect):not(.mark-start):not(.mark-end)").remove();
+            var timeNum, timeIndex, returnNum, returnIndex;
+            for (i = 0; i < JSON.parse(data.fangan).length; i++) {
+                var thisTime = JSON.parse(data.fangan)[i]["m"] * 1;
+                var thisReturn = JSON.parse(data.fangan)[i]["p"].length;
+                if (!timeNum) {
+                    timeNum = thisTime;
+                    timeIndex = i
+                } else {
+                    if (timeNum > thisTime) {
+                        timeNum = thisTime;
+                        timeIndex = i
+                    }
+                }
+                if (!returnNum) {
+                    returnNum = thisReturn;
+                    returnIndex = i
+                } else {
+                    if (returnNum > thisReturn) {
+                        returnNum = thisReturn;
+                        returnIndex = i
+                    }
+                }
+            }
+            var firstPlan = type == 1 ? JSON.parse(data.fangan)[timeIndex]["p"] : JSON.parse(data.fangan)[returnIndex]["p"];
+            linePinter(firstPlan)
+        },
+        error(data) {
+            alert(data.responseJSON.message);
+            isClick = false;
+            $(".mark").remove();
+            $(".line-info").hide();
+        }
+    })
+}
+
+function linePinter(firstPlan) {
+    var startEndMark = $("image.mark").clone();
+    $("image.mark").remove();
+    var thisLineStr = "";
+    for (var i = 0; i < firstPlan.length; i++) {
+        var lineCode = firstPlan[i][0][0];
+        var thisLine = $(beijingData).find("sw").find(`l[lcode='${lineCode}']`);
+        var lColor = thisLine.attr("lc").replace("0x", "#");
+        for (var j = 0; j < firstPlan[i].length - 1; j++) {
+            var thisPNum = firstPlan[i][j][3] * 1;
+            var thisPlusNum = firstPlan[i][j + 1][3] * 1;
+            var ssN = [thisPNum, thisPlusNum];
+            loopPinter(ssN, thisLine, lColor)
+        }
+        var thisLineNum = thisLine.attr("slb").split(",")[0]
+        thisLineStr += `<article><h3>${thisLineNum.indexOf("机场") == -1 ? "地铁" + (isNaN(thisLineNum * 1) ? thisLineNum : thisLineNum + "号") + "线" : thisLineNum + "线"}</h3><ul>`;
+        for (var j = 0; j < firstPlan[i].length; j++) {
+            var thisP = thisLine.find(`p[n='${firstPlan[i][j][3]}']`)
+            if (!thisP.attr("lb")) {
+                continue;
+            }
+            thisLineStr += `<li>${firstPlan[i][j][1]}</li>`
+            var text = $.svg('text').appendTo('#g-box')
+            text.attr({
+                "font-size": 12,
+                x: thisP.attr("x") * 1 + thisP.attr("rx") * 1,
+                y: thisP.attr("y") * 1 + thisP.attr("ry") * 1 + 14,
+                size: 12
+            }).addSvgClass("mark")
+            var tspan = $.svg('tspan').appendTo(text)
+            tspan.html(thisP.attr("lb"))
+            if (thisP.attr("iu") === "false") {
+                text.addSvgClass("disabled")
+                var text1 = $.svg('text').appendTo('#g-box')
+                text1.attr({
+                    "font-size": 12,
+                    x: thisP.attr("x") * 1 + thisP.attr("rx") * 1,
+                    y: thisP.attr("y") * 1 + thisP.attr("ry") * 1 + 28,
+                    size: 12
+                }).addSvgClass("disabled")
+                var tspan = $.svg('tspan').appendTo(text1)
+                tspan.html("(暂缓开通)")
+            }
+            if (thisP.attr("ex") === "true") {
+                var image = $.svg('image').appendTo('#g-box')
+                image.attr({
+                    width: "14",
+                    height: "14",
+                    x: thisP.attr("x") - 7,
+                    y: thisP.attr("y") - 7,
+                    sdata: thisP.attr("lb")
+                }).addSvgClass("mark");
+                image[0].href.baseVal = `https://map.bjsubway.com/subwaymap/turn.png`;
+            } else {
+                var circle = $.svg('circle').appendTo('#g-box')
+                circle.attr({
+                    r: 4,
+                    cx: thisP.attr("x") * 1,
+                    cy: thisP.attr("y") * 1,
+                    stroke: lColor,
+                    sdata: thisP.attr("lb")
+                }).addSvgClass("mark")
+                if (thisP.attr("iu") === "false") {
+                    circle.addSvgClass("disabled")
+                }
+            }
+        }
+        thisLineStr += `</ul></article>`
+        $('#g-box').append(startEndMark)
+    }
+    $(thisLineStr).appendTo(".line-info div")
+}
+
+function loopPinter(ssN, thisLine, lColor) {
+    var isLoop = thisLine.attr("loop");
+    if (isLoop === "true") {
+        if ((ssN.max() - ssN.min()) > (thisLine.find("p").length - ssN.max() + ssN.min())) {
+            for (var i = 0; i < ssN.min(); i++) {
+                var thisP = thisLine.find(`p[n='${i}']`);
+                var thisPlus = thisLine.find(`p[n='${i+1}']`);
+                if (thisP.attr("arc")) {
+                    var path = $.svg('path').appendTo('#g-box')
+                    path.attr({
+                        d: `M${thisP.attr("x")*1} ${thisP.attr("y")*1} Q${thisP.attr("arc").split(":")[0]*1} ${thisP.attr("arc").split(":")[1]*1} ${thisPlus.attr("x")*1} ${thisPlus.attr("y")*1}`,
+                        stroke: lColor
+                    }).addSvgClass("mark");
+                    continue;
+                }
+                var line = $.svg('line').appendTo('#g-box')
+                line.attr({
+                    x1: thisP.attr("x") * 1,
+                    y1: thisP.attr("y") * 1,
+                    x2: thisPlus.attr("x") * 1,
+                    y2: thisPlus.attr("y") * 1,
+                    stroke: lColor,
+                    sdata: thisP.attr("lb")
+                }).addSvgClass("mark")
+            }
+            for (var i = ssN.max(); i < thisLine.find("p").length; i++) {
+                var thisP = thisLine.find(`p[n='${i}']`);
+                var thisPlus = thisLine.find(`p[n='${i+1 ==thisLine.find("p").length?0: i+1}']`);
+                if (thisP.attr("arc")) {
+                    var path = $.svg('path').appendTo('#g-box')
+                    path.attr({
+                        d: `M${thisP.attr("x")*1} ${thisP.attr("y")*1} Q${thisP.attr("arc").split(":")[0]*1} ${thisP.attr("arc").split(":")[1]*1} ${thisPlus.attr("x")*1} ${thisPlus.attr("y")*1}`,
+                        stroke: lColor
+                    }).addSvgClass("mark");
+                    continue;
+                }
+                var line = $.svg('line').appendTo('#g-box')
+                line.attr({
+                    x1: thisP.attr("x") * 1,
+                    y1: thisP.attr("y") * 1,
+                    x2: thisPlus.attr("x") * 1,
+                    y2: thisPlus.attr("y") * 1,
+                    stroke: lColor,
+                    sdata: thisP.attr("lb")
+                }).addSvgClass("mark")
+            }
+        } else {
+            for (var i = ssN.min(); i < ssN.max(); i++) {
+                var thisP = thisLine.find(`p[n='${i}']`);
+                var thisPlus = thisLine.find(`p[n='${i+1}']`);
+                if (thisP.attr("arc")) {
+                    var path = $.svg('path').appendTo('#g-box')
+                    path.attr({
+                        d: `M${thisP.attr("x")*1} ${thisP.attr("y")*1} Q${thisP.attr("arc").split(":")[0]*1} ${thisP.attr("arc").split(":")[1]*1} ${thisPlus.attr("x")*1} ${thisPlus.attr("y")*1}`,
+                        stroke: lColor
+                    }).addSvgClass("mark");
+                    continue;
+                }
+                var line = $.svg('line').appendTo('#g-box')
+                line.attr({
+                    x1: thisP.attr("x") * 1,
+                    y1: thisP.attr("y") * 1,
+                    x2: thisPlus.attr("x") * 1,
+                    y2: thisPlus.attr("y") * 1,
+                    stroke: lColor,
+                    sdata: thisP.attr("lb")
+                }).addSvgClass("mark")
+            }
+        }
+    } else {
+        for (var i = ssN.min(); i < ssN.max(); i++) {
+            var thisP = thisLine.find(`p[n='${i}']`);
+            var thisPlus = thisLine.find(`p[n='${i+1}']`);
+            if (thisP.attr("arc")) {
+                var path = $.svg('path').appendTo('#g-box')
+                path.attr({
+                    d: `M${thisP.attr("x")*1} ${thisP.attr("y")*1} Q${thisP.attr("arc").split(":")[0]*1} ${thisP.attr("arc").split(":")[1]*1} ${thisPlus.attr("x")*1} ${thisPlus.attr("y")*1}`,
+                    stroke: lColor
+                }).addSvgClass("mark");
+                continue;
+            }
+            var line = $.svg('line').appendTo('#g-box')
+            line.attr({
+                x1: thisP.attr("x") * 1,
+                y1: thisP.attr("y") * 1,
+                x2: thisPlus.attr("x") * 1,
+                y2: thisPlus.attr("y") * 1,
+                stroke: lColor,
+                sdata: thisP.attr("lb")
+            }).addSvgClass("mark")
+        }
+    }
+}
 var eventsHandler = {
     haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
     init: function(options) {
@@ -197,6 +470,7 @@ var eventsHandler = {
         this.hammer.get('pinch').set({
             enable: true
         })
+        ``
         this.hammer.on('doubletap', function(ev) {
             instance.zoomIn()
         })
