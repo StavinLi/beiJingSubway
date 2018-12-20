@@ -256,28 +256,21 @@ function getThisLineInfo(type = 1) {
         contentType: "application/json; charset=utf-8",
         success(data) {
             $(".mark:not(rect):not(.mark-start):not(.mark-end)").remove();
-            var timeNum, timeIndex, returnNum, returnIndex;
+            var timeReturnArr = [
+                [],
+                []
+            ];
             for (var i = 0; i < JSON.parse(data.fangan).length; i++) {
                 var thisTime = JSON.parse(data.fangan)[i]["m"] * 1;
                 var thisReturn = JSON.parse(data.fangan)[i]["p"].length;
-                if (!timeNum) {
-                    timeNum = thisTime;
-                    timeIndex = i
-                } else {
-                    if (timeNum > thisTime) {
-                        timeNum = thisTime;
-                        timeIndex = i
-                    }
-                }
-                if (!returnNum) {
-                    returnNum = thisReturn;
-                    returnIndex = i
-                } else {
-                    if (returnNum > thisReturn) {
-                        returnNum = thisReturn;
-                        returnIndex = i
-                    }
-                }
+                timeReturnArr[0].push(thisTime)
+                timeReturnArr[1].push(thisReturn)
+            }
+            var timeIndex = timeReturnArr[0].indexOf(timeReturnArr[0].min());
+            if (timeReturnArr[1][timeIndex] == timeReturnArr[1].min()) {
+                returnIndex = timeIndex;
+            } else {
+                returnIndex = timeReturnArr[1].indexOf(timeReturnArr[1].min());
             }
             var firstPlan = type == 1 ? JSON.parse(data.fangan)[timeIndex]["p"] : JSON.parse(data.fangan)[returnIndex]["p"];
             linePinter(firstPlan)

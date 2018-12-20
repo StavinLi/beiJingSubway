@@ -51,8 +51,14 @@ if (!window.location.origin) {
     window.func = new All();
     Array.prototype.max = function() {
         return Math.max.apply({}, this)
-    }
+    };
+    Array.prototype.indexOf = function(v) {
+        for (var i = 0, n = this.length; i < n; i++) {
+            if (this[i] == v) return i;
+        }
+        return -1;
+    };
     Array.prototype.min = function() {
         return Math.min.apply({}, this)
-    }
+    };
 })(window);
