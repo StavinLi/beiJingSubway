@@ -257,7 +257,7 @@ function getThisLineInfo(type = 1) {
         success(data) {
             $(".mark:not(rect):not(.mark-start):not(.mark-end)").remove();
             var timeNum, timeIndex, returnNum, returnIndex;
-            for (i = 0; i < JSON.parse(data.fangan).length; i++) {
+            for (var i = 0; i < JSON.parse(data.fangan).length; i++) {
                 var thisTime = JSON.parse(data.fangan)[i]["m"] * 1;
                 var thisReturn = JSON.parse(data.fangan)[i]["p"].length;
                 if (!timeNum) {
