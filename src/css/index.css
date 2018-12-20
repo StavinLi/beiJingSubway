@@ -78,8 +78,14 @@ body {
     color: #ffffff;
 }
 
+.line-info p {
+    font-size: 12px;
+    height: 24px;
+    line-height: 24px;
+}
+
 .line-info div {
-    height: 455px;
+    height: 430px;
     overflow-y: scroll;
 }
 

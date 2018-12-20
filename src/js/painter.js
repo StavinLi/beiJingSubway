@@ -1,6 +1,9 @@
 var beijingData = "",
     startStation = "",
     endStation = "";
+if (!func.isPC()) {
+    alert("移动端部分功能无法体验，请在PC端查看")
+}
 $.ajax({
     url: "/apis/subwaymap/beijing.xml",
     dataType: 'xml',
@@ -273,8 +276,13 @@ function getThisLineInfo(type = 1) {
             } else {
                 returnIndex = timeReturnArr[1].indexOf(timeReturnArr[1].min());
             }
-            var firstPlan = type == 1 ? JSON.parse(data.fangan)[timeIndex]["p"] : JSON.parse(data.fangan)[returnIndex]["p"];
-            linePinter(firstPlan)
+            var firstPlan = type == 1 ? JSON.parse(data.fangan)[timeIndex] : JSON.parse(data.fangan)[returnIndex];
+            var stationNum = 0;
+            for (var i = 0; i < firstPlan["p"].length; i++) {
+                stationNum += firstPlan["p"][i].length
+            }
+            $(".line-info p").html(`约${firstPlan.m}分钟• 途径${stationNum}站• 换乘${firstPlan["p"].length-1}次• 票价${data.price}元`)
+            linePinter(firstPlan["p"])
         },
         error(data) {
             alert(data.responseJSON.message);
