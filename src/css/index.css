@@ -60,6 +60,16 @@ body {
     line-height: 65px;
 }
 
+.line-info h2 span {
+    vertical-align: middle;
+}
+
+.line-info h2 img {
+    vertical-align: middle;
+    cursor: pointer;
+    margin: 0 10px 0;
+}
+
 .line-type {
     border-top: 1px solid #000;
     border-bottom: 1px solid #000;

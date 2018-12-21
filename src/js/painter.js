@@ -1,6 +1,9 @@
-var beijingData = "",
-    startStation = "",
-    endStation = "";
+var BJ = {
+    data: "",
+    startName: "",
+    endName: "",
+    type: 1
+}
 if (!func.isPC()) {
     alert("移动端部分功能无法体验，请在PC端查看")
 }
@@ -11,7 +14,7 @@ $.ajax({
     async: false,
     timeout: 5000,
     success: function(data) {
-        beijingData = data;
+        BJ.data = data;
         var ls = $(data).find("sw").children()
         for (var i = 0; i < ls.length; i++) {
             var ps = $(ls[i]).children()
@@ -58,8 +61,7 @@ $.ajax({
                     y1: thisP.attr("y") * 1,
                     x2: thisPlus.attr("x") * 1,
                     y2: thisPlus.attr("y") * 1,
-                    stroke: lColor,
-                    sdata: thisP.attr("lb")
+                    stroke: lColor
                 })
             }
             for (var j = 0; j < ps.length; j++) {
@@ -94,10 +96,10 @@ $.ajax({
                         width: "14",
                         height: "14",
                         x: thisP.attr("x") - 7,
-                        y: thisP.attr("y") - 7,
+                        y: thisP.attr("y") - 7 + (thisP.attr("dy") ? thisP.attr("dy") * 1 : ""),
                         sdata: thisP.attr("lb")
                     });
-                    image[0].href.baseVal = `https://map.bjsubway.com/subwaymap/turn.png`;
+                    image[0].href.baseVal = `/apis/subwaymap/turn.png`;
                 } else {
                     var circle = $.svg('circle').appendTo('#g-box')
                     circle.attr({
@@ -156,26 +158,22 @@ $.ajax({
         }
         var timer = null,
             isStart = true;
-        $("circle:not(.disabled),image[sdata]").on("click", function() {
+        $("[sdata]").on("click", function() {
             var $that = $(this)
             isClick = true;
             var image = $.svg('image').appendTo('#g-box')
             $(".station-info").hide();
             image.attr({
-                name: $that.attr("sdata"),
                 width: "20",
                 height: "31",
                 x: $that[0].nodeName == "circle" ? $that.attr("cx") - 10 : ($that.attr("x") - 3),
                 y: $that[0].nodeName == "circle" ? $that.attr("cy") - 28 : ($that.attr("y") - 21),
-            }).addSvgClass(`mark ${isStart?"mark-start":"mark-end"}`);
-            image[0].href.baseVal = `https://map.bjsubway.com/subwaymap/${isStart?"start":"end"}.png`;
+            }).addSvgClass("mark");
+            image[0].href.baseVal = `/apis/subwaymap/${isStart?"start":"end"}.png`;
+            isStart == true ? BJ.startName = $that.attr("sdata") : BJ.endName = $that.attr("sdata");
             isStart = !isStart;
             if (isStart) {
-                startStation = $(".mark-start").attr("name");
-                endStation = $(".mark-end").attr("name");
-                $(".line-info h2").html(`${startStation} - ${endStation}`);
-                $(".line-type li").removeClass("active");
-                $(".line-type li[data-value='1']").addClass("active");
+                BJ.type = 1;
                 var rect = $.svg('rect').appendTo('#g-box');
                 rect.attr({
                     width: 2500,
@@ -183,7 +181,7 @@ $.ajax({
                     x: -250,
                     y: 0
                 }).addSvgClass("mark");
-                getThisLineInfo(1);
+                getThisLineInfo();
                 var flag = 0;
                 $("rect.mark").bind({
                     mousedown: function(e) {
@@ -205,7 +203,7 @@ $.ajax({
                 });
             }
         });
-        $("circle:not(.disabled),image[sdata]").hover(function() {
+        $("[sdata]").hover(function() {
             if (isClick) {
                 return;
             }
@@ -246,24 +244,32 @@ $.ajax({
 
 $(".line-type").on("click", "li:not(.active)", function() {
     $(this).addClass("active").siblings().removeClass("active");
-    getThisLineInfo($(this).attr("data-value"));
+    BJ.type = $(this).attr("data-value")
+    getThisLineInfo();
 });
+$(".line-info h2").on("click", "img", function() {
+    [BJ.startName, BJ.endName] = [BJ.endName, BJ.startName]
+    getThisLineInfo();
+})
 
-function getThisLineInfo(type = 1) {
+function getThisLineInfo() {
+    $(".line-info h2 span").eq(0).html(BJ.startName);
+    $(".line-info h2 span").eq(1).html(BJ.endName);
+    $(".line-type li[data-value='" + BJ.type + "']").addClass("active").siblings().removeClass("active");
     $(".line-info article").remove();
     $.ajax({
         type: "get",
-        url: `/apis/api/searchstartend?start=${startStation}&end=${endStation}`,
+        url: `/apis/api/searchstartend?start=${BJ.startName}&end=${BJ.endName}`,
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         success(data) {
             if (data.result == "error") {
-                alert(`抱歉，${startStation}到${endStation}无法换乘`);
+                alert(`抱歉，${BJ.startName}到${BJ.endName}无法换乘`);
                 $(".mark").remove();
                 return;
             }
             $(".line-info").show();
-            $(".mark:not(rect):not(.mark-start):not(.mark-end)").remove();
+            $(".mark:not(rect)").remove();
             var timeReturnArr = [
                 [],
                 []
@@ -281,7 +287,7 @@ function getThisLineInfo(type = 1) {
             } else {
                 returnIndex = timeReturnArr[1].indexOf(timeReturnArr[1].min());
             }
-            var firstPlan = type == 1 ? JSON.parse(data.fangan)[timeIndex] : JSON.parse(data.fangan)[returnIndex];
+            var firstPlan = BJ.type == 1 ? JSON.parse(data.fangan)[timeIndex] : JSON.parse(data.fangan)[returnIndex];
             var stationNum = 0;
             for (var i = 0; i < firstPlan["p"].length; i++) {
                 stationNum += firstPlan["p"][i].length
@@ -299,12 +305,10 @@ function getThisLineInfo(type = 1) {
 }
 
 function linePinter(firstPlan) {
-    var startEndMark = $("image.mark").clone();
-    $("image.mark").remove();
     var thisLineStr = "";
     for (var i = 0; i < firstPlan.length; i++) {
         var lineCode = firstPlan[i][0][0];
-        var thisLine = $(beijingData).find("sw").find(`l[lcode='${lineCode}']`);
+        var thisLine = $(BJ.data).find("sw").find(`l[lcode='${lineCode}']`);
         var lColor = thisLine.attr("lc").replace("0x", "#");
         for (var j = 0; j < firstPlan[i].length - 1; j++) {
             var thisPNum = firstPlan[i][j][3] * 1;
@@ -347,10 +351,9 @@ function linePinter(firstPlan) {
                     width: "14",
                     height: "14",
                     x: thisP.attr("x") - 7,
-                    y: thisP.attr("y") - 7,
-                    sdata: thisP.attr("lb")
+                    y: thisP.attr("y") - 7 + (thisP.attr("dy") ? thisP.attr("dy") * 1 : ""),
                 }).addSvgClass("mark");
-                image[0].href.baseVal = `https://map.bjsubway.com/subwaymap/turn.png`;
+                image[0].href.baseVal = `/apis/subwaymap/turn.png`;
             } else {
                 var circle = $.svg('circle').appendTo('#g-box')
                 circle.attr({
@@ -358,7 +361,6 @@ function linePinter(firstPlan) {
                     cx: thisP.attr("x") * 1,
                     cy: thisP.attr("y") * 1,
                     stroke: lColor,
-                    sdata: thisP.attr("lb")
                 }).addSvgClass("mark")
                 if (thisP.attr("iu") === "false") {
                     circle.addSvgClass("disabled")
@@ -366,7 +368,24 @@ function linePinter(firstPlan) {
             }
         }
         thisLineStr += `</ul></article>`
-        $('#g-box').append(startEndMark)
+        var startPoint = $("[sdata='" + BJ.startName + "']")
+        var startImg = $.svg('image').appendTo('#g-box');
+        startImg.attr({
+            width: 20,
+            height: 31,
+            x: startPoint[0].nodeName == "circle" ? startPoint.attr("cx") - 10 : (startPoint.attr("x") - 3),
+            y: startPoint[0].nodeName == "circle" ? startPoint.attr("cy") - 28 : (startPoint.attr("y") - 21),
+        }).addSvgClass("mark");
+        startImg[0].href.baseVal = `/apis/subwaymap/start.png`;
+        var endImg = $.svg('image').appendTo('#g-box');
+        var endPoint = $("[sdata='" + BJ.endName + "']")
+        endImg.attr({
+            width: 20,
+            height: 31,
+            x: endPoint[0].nodeName == "circle" ? endPoint.attr("cx") - 10 : (endPoint.attr("x") - 3),
+            y: endPoint[0].nodeName == "circle" ? endPoint.attr("cy") - 28 : (endPoint.attr("y") - 21),
+        }).addSvgClass("mark");
+        endImg[0].href.baseVal = `/apis/subwaymap/end.png`;
     }
     $(thisLineStr).appendTo(".line-info div")
 }
@@ -392,8 +411,7 @@ function loopPinter(ssN, thisLine, lColor) {
                     y1: thisP.attr("y") * 1,
                     x2: thisPlus.attr("x") * 1,
                     y2: thisPlus.attr("y") * 1,
-                    stroke: lColor,
-                    sdata: thisP.attr("lb")
+                    stroke: lColor
                 }).addSvgClass("mark")
             }
             for (var i = ssN.max(); i < thisLine.find("p").length; i++) {
@@ -413,8 +431,7 @@ function loopPinter(ssN, thisLine, lColor) {
                     y1: thisP.attr("y") * 1,
                     x2: thisPlus.attr("x") * 1,
                     y2: thisPlus.attr("y") * 1,
-                    stroke: lColor,
-                    sdata: thisP.attr("lb")
+                    stroke: lColor
                 }).addSvgClass("mark")
             }
         } else {
@@ -435,8 +452,7 @@ function loopPinter(ssN, thisLine, lColor) {
                     y1: thisP.attr("y") * 1,
                     x2: thisPlus.attr("x") * 1,
                     y2: thisPlus.attr("y") * 1,
-                    stroke: lColor,
-                    sdata: thisP.attr("lb")
+                    stroke: lColor
                 }).addSvgClass("mark")
             }
         }
@@ -459,7 +475,6 @@ function loopPinter(ssN, thisLine, lColor) {
                 x2: thisPlus.attr("x") * 1,
                 y2: thisPlus.attr("y") * 1,
                 stroke: lColor,
-                sdata: thisP.attr("lb")
             }).addSvgClass("mark")
         }
     }

@@ -56,8 +56,8 @@ gulp.task('js', function() {
         .pipe(gulp.dest('rev/js'))
 });
 gulp.task('other', function() {
-    return gulp.src('src/libs/*.js')
-        .pipe(gulp.dest('dest/libs'))
+    return gulp.src(['src/libs/*.js', 'src/images/*'], { base: 'src' })
+        .pipe(gulp.dest('dest'))
 });
 
 
