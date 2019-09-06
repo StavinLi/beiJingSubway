@@ -4,7 +4,7 @@
 北京地铁图，基于svg开发，支持PC、移动端多种浏览器。
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20181218084607543.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM3Mjg1MTkz,size_16,color_FFFFFF,t_70)
 -  [线上开源地址 https://github.com/StavinLi/beiJingSubway](https://github.com/StavinLi/beiJingSubway) 点个赞吧！
-- [项目预览 http://47.106.166.17:5101/](http://47.106.166.17:5101/)
+- [项目预览 暂时无法]
 
 -------------------
  
@@ -74,10 +74,6 @@ gulp.task('default', function(cb) {
 └── gulpfile.js
 ```
 
-#### 页面预览
-- [在线预览](http://47.106.166.17:5101/) 点个赞吧！
-
-
 #### 更新记录
 
 ##### 2018.12.06
@@ -108,7 +104,7 @@ gulp.task('default', function(cb) {
 ```
     -  新增起止点转换
 ```
-##### 2018.12.21
+##### 2019.9.6
 ```
     -  node 新增 设置证书免校验
 ```
