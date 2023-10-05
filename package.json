@@ -25,9 +25,11 @@
         "gulp-uglify": "^3.0.0"
     },
     "dependencies": {
-        "express": "^4.16.4",
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
         "gulp-sourcemaps": "^2.6.4",
         "http-proxy-middleware": "^0.19.1",
+        "mysql2": "^3.6.1",
         "open": "0.0.5"
     }
 }

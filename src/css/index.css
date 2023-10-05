@@ -41,6 +41,9 @@ body {
     padding: 10px;
     overflow-y: scroll;
 }
+.station-info li{
+    font-size: medium;
+}
 
 .line-info {
     position: absolute;
