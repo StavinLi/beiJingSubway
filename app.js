@@ -4,13 +4,13 @@ var app = express();
 app.use(express.static('src'));
 var gData = null;
 //读取数据
-fs.readFile("C:\\Users\\Administrator\\Desktop\\study\\beiJingSubway\\src\\js\\subway.xml", function(err, data) {
+fs.readFile("/Applications/project/beiJingSubway/src/js/subway.xml", function(err, data) {
     //数据读取成功
     if (err)
         throw new Error('读取数据出错！');
     gData = data;
 
-    app.listen(7000);
+    app.listen(7020);
     console.log('服务已启动')
 });
 //访问数据
